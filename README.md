@@ -1,0 +1,1 @@
+# Store-management-platform-be
