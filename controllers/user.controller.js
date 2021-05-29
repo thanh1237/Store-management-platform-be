@@ -68,4 +68,34 @@ userController.deleteUser = catchAsync(async (req, res, next) => {
   return sendResponse(res, 200, true, null, null, "Delete table successful");
 });
 
+userController.changePassword = catchAsync(async (req, res, next) => {
+  let userId = req.params.id;
+  let { name, password, email, role } = req.body;
+  const user = await User.findOneAndUpdate(
+    { _id: userId },
+    {
+      name,
+      password,
+      email,
+      role,
+    }
+  );
+  if (!user)
+    return next(
+      new AppError(
+        400,
+        "User not found or User not authorized",
+        "Change password fail"
+      )
+    );
+  return sendResponse(
+    res,
+    200,
+    true,
+    { user },
+    null,
+    "Change Password Successful"
+  );
+});
+
 module.exports = userController;

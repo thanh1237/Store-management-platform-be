@@ -9,7 +9,6 @@ const productController = {};
 
 productController.getProducts = catchAsync(async (req, res, next) => {
   let { page, limit, sortBy, ...filter } = req.query;
-
   page = parseInt(page) || 1;
   limit = parseInt(limit) || 10;
 
@@ -26,7 +25,7 @@ productController.getProducts = catchAsync(async (req, res, next) => {
 });
 
 productController.getProductId = catchAsync(async (req, res, next) => {
-  const proId = req.productId;
+  const proId = req.params.id;
   const product = await Product.findById(proId);
   if (!product)
     return next(
@@ -43,7 +42,8 @@ productController.getProductId = catchAsync(async (req, res, next) => {
 });
 
 productController.createProduct = catchAsync(async (req, res, next) => {
-  let { name, unit, cost, price, quantity, stock } = req.body;
+  let { name, unit, cost, price, quantity, stock, type, ingredients } =
+    req.body;
   const product = await Product.create({
     name,
     unit,
@@ -51,6 +51,8 @@ productController.createProduct = catchAsync(async (req, res, next) => {
     price,
     quantity,
     stock,
+    type,
+    ingredients,
   });
 
   return sendResponse(
@@ -65,7 +67,8 @@ productController.createProduct = catchAsync(async (req, res, next) => {
 
 productController.updateProduct = catchAsync(async (req, res, next) => {
   const productId = req.params.id;
-  let { name, unit, cost, price, quantity, stock } = req.body;
+  let { name, unit, cost, price, quantity, stock, type, ingredients } =
+    req.body;
   if (!quantity) {
     quantity = 1;
   }
@@ -81,6 +84,8 @@ productController.updateProduct = catchAsync(async (req, res, next) => {
       price,
       quantity,
       stock,
+      type,
+      ingredients,
     }
   );
   if (!product)

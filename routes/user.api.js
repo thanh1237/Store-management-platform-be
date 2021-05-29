@@ -43,9 +43,13 @@ router.get("/", userController.getUsers);
  * @description DELETE user
  * @access Login required
  */
-router.delete(
-  "/:id",
-  // authentication.loginRequired,
-  userController.deleteUser
-);
+router.delete("/:id", authentication.loginRequired, userController.deleteUser);
+
+/**
+ * @route PUT api/users/
+ * @description UPDATE current user info
+ * @access Login required
+ */
+router.put("/:id", authentication.loginRequired, userController.changePassword);
+
 module.exports = router;
