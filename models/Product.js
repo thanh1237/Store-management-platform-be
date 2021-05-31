@@ -8,13 +8,12 @@ const productSchema = Schema(
     unit: { type: String, required: true },
     quantity: { type: Number, default: 1 },
     cost: { type: Number, default: 0, required: true },
-    stock: { type: Number, default: 0 },
+    stock: [{ type: Schema.Types.ObjectId, ref: "Stock" }],
     type: {
       type: String,
       required: true,
-      enum: ["Cocktail", "Beer", "Mocktail"],
+      enum: ["Cocktail", "Beer", "Mocktail", "Spirit"],
     },
-    isDeleted: { type: Boolean, default: false, select: false },
     ingredients: [
       {
         ingredient: { type: String },
@@ -22,6 +21,7 @@ const productSchema = Schema(
         consumption: { type: Number, default: 0 },
       },
     ],
+    isDeleted: { type: Boolean, default: false, select: false },
   },
   { timestamps: true }
 );

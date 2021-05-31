@@ -19,7 +19,8 @@ productController.getProducts = catchAsync(async (req, res, next) => {
   const products = await Product.find({ ...filter })
     .sort({ ...sortBy, createdAt: -1 })
     .skip(offset)
-    .limit(limit);
+    .limit(limit)
+    .populate("stock");
 
   return sendResponse(res, 200, true, { products, totalPages }, null, "");
 });
@@ -42,15 +43,13 @@ productController.getProductId = catchAsync(async (req, res, next) => {
 });
 
 productController.createProduct = catchAsync(async (req, res, next) => {
-  let { name, unit, cost, price, quantity, stock, type, ingredients } =
-    req.body;
+  let { name, unit, cost, price, quantity, type, ingredients } = req.body;
   const product = await Product.create({
     name,
     unit,
     cost,
     price,
     quantity,
-    stock,
     type,
     ingredients,
   });
