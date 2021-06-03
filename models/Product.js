@@ -8,11 +8,10 @@ const productSchema = Schema(
     unit: { type: String, required: true },
     quantity: { type: Number, default: 1 },
     cost: { type: Number, default: 0, required: true },
-    stock: [{ type: Schema.Types.ObjectId, ref: "Stock" }],
     type: {
       type: String,
       required: true,
-      enum: ["Cocktail", "Beer", "Mocktail", "Spirit"],
+      enum: ["Cocktail", "Beer", "Mocktail", "Spirit", "Alcohol"],
     },
     ingredients: [
       {

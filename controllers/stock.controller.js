@@ -3,9 +3,8 @@ const {
   catchAsync,
   sendResponse,
 } = require("../helpers/utils.helper");
+const Order = require("../models/Order");
 const Stock = require("../models/Stock");
-const bcrypt = require("bcryptjs");
-const Product = require("../models/Product");
 const stockController = {};
 
 stockController.getStocks = catchAsync(async (req, res, next) => {
@@ -13,50 +12,92 @@ stockController.getStocks = catchAsync(async (req, res, next) => {
   page = parseInt(page) || 1;
   limit = parseInt(limit) || 10;
 
-  const totalNumProducts = await Stock.find({ ...filter }).countDocuments();
-  const totalPages = Math.ceil(totalNumProducts / limit);
+  const totalNumReports = await Stock.find({ ...filter }).countDocuments();
+  const totalPages = Math.ceil(totalNumReports / limit);
   const offset = limit * (page - 1);
-  const { productId } = req.body;
-  const stocks = await Stock.find({ product: productId })
+  const stocks = await Stock.find({ ...filter })
     .sort({ ...sortBy, createdAt: -1 })
     .skip(offset)
-    .limit(limit);
-
+    .limit(limit)
+    .populate("product");
   return sendResponse(res, 200, true, { stocks, totalPages }, null, "");
 });
 
 stockController.createStock = catchAsync(async (req, res, next) => {
-  let { productId, yesterdayStock, stockIn, stockOut, estimate, real, note } =
+  let { productId, userId, start, stockIn, stockOut, estimate, real, note } =
     req.body;
-  const product = await Product.findById(productId);
-  const stock = await Stock.create({
-    product: productId,
-    yesterdayStock,
-    stockIn,
-    stockOut,
-    estimate,
-    real,
-    note,
-  });
+  let stock;
+  const orderByAuthor = await Order.find({ author: userId });
+  const orderId = orderByAuthor?.find((e) => {
+    return e._id;
+  })?._id;
 
-  let stockArr = product.stock;
-  console.log(product.stock);
-  stockArr.push(stock._id);
+  if (orderId) {
+    const order = await Order.findById(orderId);
+    stock = await Stock.create({
+      product: productId,
+      order: orderId,
+      author: userId,
+      start,
+      stockIn,
+      stockOut,
+      estimate,
+      real,
+      note,
+    });
+    const stockArray = order.stocks;
+    const updateStockArr = stockArray.concat([stock._id]);
+    await Order.findByIdAndUpdate(orderId, {
+      stocks: updateStockArr,
+    });
+  } else if (!orderId) {
+    stock = await Stock.create({
+      product: productId,
+      author: userId,
+      start,
+      stockIn,
+      stockOut,
+      estimate,
+      real,
+      note,
+    });
+    const order = await Order.create({
+      stocks: [stock._id],
+      author: userId,
+    });
 
-  const updateProduct = await Product.findByIdAndUpdate(productId, {
-    stock: stockArr,
-  });
+    const stockId = stock._id;
+    stock = await Stock.findByIdAndUpdate(stockId, { order: [order._id] });
+  }
+
   return sendResponse(
     res,
     200,
     true,
-    { updateProduct },
+    { stock },
     null,
-    "Create Product Successful"
+    "Create Stock Successful"
   );
 });
 
-// productController.updateProduct = catchAsync(async (req, res, next) => {
+// orderController.getProductId = catchAsync(async (req, res, next) => {
+//   const proId = req.params.id;
+//   const product = await Product.findById(proId);
+//   if (!product)
+//     return next(
+//       new AppError(400, "Product not found", "Get Product by id Error")
+//     );
+//   return sendResponse(
+//     res,
+//     200,
+//     true,
+//     product,
+//     null,
+//     "Get Product successfully"
+//   );
+// });
+
+// orderController.updateProduct = catchAsync(async (req, res, next) => {
 //   const productId = req.params.id;
 //   let { name, unit, cost, price, quantity, stock, type, ingredients } =
 //     req.body;
@@ -97,7 +138,7 @@ stockController.createStock = catchAsync(async (req, res, next) => {
 //   );
 // });
 
-// productController.deleteProduct = catchAsync(async (req, res, next) => {
+// orderController.deleteProduct = catchAsync(async (req, res, next) => {
 //   const id = req.params.id;
 //   const product = await Product.findOneAndDelete({ _id: id });
 //   if (!product)

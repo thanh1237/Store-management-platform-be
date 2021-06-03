@@ -18,18 +18,19 @@ orderController.getOrders = catchAsync(async (req, res, next) => {
     .sort({ ...sortBy, createdAt: -1 })
     .skip(offset)
     .limit(limit)
-    .populate("products")
-    .populate("author")
-    .populate("stock");
+    .populate({
+      path: "stocks",
+      // Get friends of friends - populate the 'friends' array for every friend
+      populate: { path: "stocks" },
+    })
+    .populate("author");
   return sendResponse(res, 200, true, { orders, totalPages }, null, "");
 });
 
 orderController.createOrder = catchAsync(async (req, res, next) => {
-  console.log(req.body);
-  let { products, author } = req.body;
-
+  let { stocks, author } = req.body;
   const order = await Order.create({
-    products,
+    stocks,
     author,
   });
   return sendResponse(

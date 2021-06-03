@@ -12,11 +12,11 @@ router.use("/auth", authApi);
 // productsApi
 const productApi = require("./products.api");
 router.use("/products", productApi);
-// reportsApi
-const orderApi = require("./order.api");
-router.use("/orders", orderApi);
 // stocksApi
 const stockApi = require("./stock.api");
 router.use("/stocks", stockApi);
+// reportsApi
+const orderApi = require("./order.api");
+router.use("/orders", orderApi);
 
 module.exports = router;

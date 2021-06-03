@@ -19,7 +19,6 @@ authMiddleware.loginRequired = (req, res, next) => {
           );
         }
       }
-      // console.log(payload);
       req.userId = payload._id;
     });
     next();

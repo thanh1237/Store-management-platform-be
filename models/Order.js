@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const orderSchema = Schema(
   {
-    products: [{ type: Schema.Types.ObjectId, required: true, ref: "Product" }],
+    stocks: [{ type: Schema.Types.ObjectId, required: true, ref: "Stock" }],
     author: { type: Schema.Types.ObjectId, required: true, ref: "User" },
     isDeleted: { type: Boolean, default: false, select: false },
   },
