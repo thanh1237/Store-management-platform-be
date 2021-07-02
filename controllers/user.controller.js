@@ -4,7 +4,9 @@ const {
   sendResponse,
 } = require("../helpers/utils.helper");
 const User = require("../models/User");
-const bcrypt = require("bcryptjs");
+const Order = require("../models/Order");
+const Product = require("../models/Product");
+const Stock = require("../models/Stock");
 const userController = {};
 
 userController.register = catchAsync(async (req, res, next) => {
@@ -23,6 +25,60 @@ userController.register = catchAsync(async (req, res, next) => {
     role,
   });
   const accessToken = await user.generateToken();
+
+  let { page, limit, sortBy, ...filter } = req.query;
+
+  const totalNumProducts = await Product.find({ ...filter }).countDocuments();
+  const totalPages = Math.ceil(totalNumProducts / limit);
+  const offset = limit * (page - 1);
+
+  const products = await Product.find({ ...filter })
+    .sort({ ...sortBy, createdAt: -1 })
+    .skip(offset);
+
+  const noneCocktailList = products?.filter((e) => e.type !== "Cocktail");
+  const noneMocktailList = noneCocktailList?.filter(
+    (e) => e.type !== "Mocktail"
+  );
+  const productId = noneMocktailList?.map((e) => e._id);
+  const order = await Order.create({
+    author: user._id,
+  });
+  const create = productId?.map(async (e) => {
+    let newStock = await Stock.create({
+      product: e,
+      order: order._id,
+      author: user._id,
+      start: 0,
+      stockIn: 0,
+      stockOut: 0,
+      estimate: 0,
+      real: 0,
+      note: 0,
+    });
+    let stockList = await Stock.find({ ...filter }, function (err, result) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(result);
+      }
+    })
+      .sort({ ...sortBy, createdAt: -1 })
+      .skip(offset);
+    const stockArr = stockList.filter((stock) => stock.author.equals(user._id));
+    const newOrder = await Order.findById(order._id).exec();
+    const stockOfOrder = newOrder.stocks;
+    const stockIdArr = stockArr.map((e) => e._id);
+    const update = stockOfOrder.concat(stockIdArr);
+    let removeDuplicate = update.filter((c, index) => {
+      return update.indexOf(c) === index;
+    });
+    await Order.findOneAndUpdate(
+      { _id: order._id },
+      { stocks: removeDuplicate, author: user._id },
+      { new: true }
+    );
+  });
 
   return sendResponse(res, 200, true, { user }, null, "Create user successful");
 });
@@ -65,6 +121,9 @@ userController.deleteUser = catchAsync(async (req, res, next) => {
         "Delete User Error"
       )
     );
+  const order = await Order.findOne({ author: id });
+  await Order.findOneAndDelete({ _id: order._id });
+
   return sendResponse(res, 200, true, null, null, "Delete table successful");
 });
 

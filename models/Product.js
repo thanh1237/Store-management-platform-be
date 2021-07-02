@@ -4,20 +4,23 @@ const Schema = mongoose.Schema;
 const productSchema = Schema(
   {
     name: { type: String, required: true },
-    price: { type: Number, required: true },
+    price: { type: Number, default: 0 },
     unit: { type: String, required: true },
     quantity: { type: Number, default: 1 },
     cost: { type: Number, default: 0, required: true },
+    capacity: { type: Number, default: 0 },
     type: {
       type: String,
       required: true,
-      enum: ["Cocktail", "Beer", "Mocktail", "Spirit", "Alcohol"],
+      enum: ["Cocktail", "Beer", "Mocktail", "Spirit", "Alcohol", "Ingredient"],
     },
     ingredients: [
       {
         ingredient: { type: String },
         unit: { type: String },
         consumption: { type: Number, default: 0 },
+        cost: { type: Number, default: 0 },
+        capacity: { type: Number, default: 0 },
       },
     ],
     isDeleted: { type: Boolean, default: false, select: false },

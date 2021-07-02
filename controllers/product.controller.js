@@ -45,19 +45,28 @@ productController.getProductId = catchAsync(async (req, res, next) => {
 });
 
 productController.createProduct = catchAsync(async (req, res, next) => {
-  let { name, unit, cost, price, quantity, type, ingredients, stock } =
-    req.body;
+  let {
+    name,
+    unit,
+    cost,
+    capacity,
+    price,
+    quantity,
+    type,
+    ingredients,
+    stock,
+  } = req.body;
   const product = await Product.create({
     name,
     unit,
     cost,
     price,
+    capacity,
     quantity,
     type,
     ingredients,
   });
-  if (unit === "btl") {
-    // get Users
+  if (type === "Beer" || type === "Alcohol" || type === "Ingredient") {
     let { page, limit, sortBy, ...filter } = req.query;
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 10;
@@ -112,7 +121,8 @@ productController.createProduct = catchAsync(async (req, res, next) => {
 
 productController.updateProduct = catchAsync(async (req, res, next) => {
   const productId = req.params.id;
-  let { name, unit, cost, price, quantity, type, ingredients } = req.body;
+  let { name, unit, cost, capacity, price, quantity, type, ingredients } =
+    req.body;
 
   if (!quantity) {
     quantity = 1;
@@ -124,11 +134,13 @@ productController.updateProduct = catchAsync(async (req, res, next) => {
       name,
       unit,
       cost,
+      capacity,
       price,
       quantity,
       type,
       ingredients,
-    }
+    },
+    { new: true }
   );
   if (!product)
     return next(

@@ -21,12 +21,12 @@ router.get("/", stockController.getStocks);
  */
 router.post("/", stockController.createStock);
 
-// /**
-//  * @route PUT api/reports/:id
-//  * @description Update a report
-//  * @access Login required
-//  */
-// router.put("/:id", reportController.updateReport);
+/**
+ * @route PUT api/stocks/:id
+ * @description Update a stock
+ * @access Login required
+ */
+router.put("/", stockController.updateStock);
 // /**
 //  * @route DELETE api/reports/:id
 //  * @description Delete a report
