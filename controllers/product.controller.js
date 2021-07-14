@@ -50,6 +50,7 @@ productController.createProduct = catchAsync(async (req, res, next) => {
     unit,
     cost,
     capacity,
+    capacityUnit,
     price,
     quantity,
     type,
@@ -62,6 +63,7 @@ productController.createProduct = catchAsync(async (req, res, next) => {
     cost,
     price,
     capacity,
+    capacityUnit,
     quantity,
     type,
     ingredients,
@@ -121,11 +123,23 @@ productController.createProduct = catchAsync(async (req, res, next) => {
 
 productController.updateProduct = catchAsync(async (req, res, next) => {
   const productId = req.params.id;
-  let { name, unit, cost, capacity, price, quantity, type, ingredients } =
-    req.body;
+  let {
+    name,
+    unit,
+    cost,
+    capacity,
+    capacityUnit,
+    price,
+    quantity,
+    type,
+    ingredients,
+  } = req.body;
 
   if (!quantity) {
     quantity = 1;
+  }
+  if (!capacityUnit) {
+    capacityUnit = "ml";
   }
 
   const product = await Product.findOneAndUpdate(
@@ -135,6 +149,7 @@ productController.updateProduct = catchAsync(async (req, res, next) => {
       unit,
       cost,
       capacity,
+      capacityUnit,
       price,
       quantity,
       type,
