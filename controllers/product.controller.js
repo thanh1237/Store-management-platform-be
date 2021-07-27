@@ -12,19 +12,16 @@ const productController = {};
 
 productController.getProducts = catchAsync(async (req, res, next) => {
   let { page, limit, sortBy, ...filter } = req.query;
-  page = parseInt(page) || 1;
-  limit = parseInt(limit) || 10;
+  // page = parseInt(page) || 1;
+  // limit = parseInt(limit) || 10;
 
-  const totalNumProducts = await Product.find({ ...filter }).countDocuments();
-  const totalPages = Math.ceil(totalNumProducts / limit);
-  const offset = limit * (page - 1);
+  // const totalNumProducts = await Product.find({ ...filter }).countDocuments();
+  // const totalPages = Math.ceil(totalNumProducts / limit);
+  // const offset = limit * (page - 1);
 
-  const products = await Product.find({ ...filter })
-    .sort({ ...sortBy, createdAt: -1 })
-    .skip(offset)
-    .limit(limit);
+  const products = await Product.find({ ...filter });
 
-  return sendResponse(res, 200, true, { products, totalPages }, null, "");
+  return sendResponse(res, 200, true, { products }, null, "");
 });
 
 productController.getProductId = catchAsync(async (req, res, next) => {
@@ -80,7 +77,7 @@ productController.createProduct = catchAsync(async (req, res, next) => {
     // Array of userIds
     const userIds = users.map((e) => e._id);
     // For each userIds create orders, stocks
-    const create = userIds?.map(async (e) => {
+    userIds?.map(async (e) => {
       const orderByUser = await Order.findOne({ author: e }).exec();
       const orderIdByUser = orderByUser?._id;
       if (orderIdByUser) {

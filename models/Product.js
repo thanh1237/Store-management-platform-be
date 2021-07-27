@@ -13,7 +13,15 @@ const productSchema = Schema(
     type: {
       type: String,
       required: true,
-      enum: ["Cocktail", "Beer", "Mocktail", "Spirit", "Alcohol", "Ingredient"],
+      enum: [
+        "Cocktail",
+        "Beer",
+        "Mocktail",
+        "Spirit",
+        "Alcohol",
+        "Ingredient",
+        "Food",
+      ],
     },
     ingredients: [
       {

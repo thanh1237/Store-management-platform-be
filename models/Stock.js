@@ -11,6 +11,8 @@ const stockSchema = Schema(
     stockOut: { type: Number, default: 0 },
     estimate: { type: Number, default: 0 },
     real: { type: Number, default: 0 },
+    orderNeeded: { type: Number, default: 0 },
+    orderQuantity: { type: Number, default: 0 },
     note: { type: String, default: "" },
     isDeleted: { type: Boolean, default: false, select: false },
   },

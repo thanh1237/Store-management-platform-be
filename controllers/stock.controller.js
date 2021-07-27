@@ -9,18 +9,8 @@ const stockController = {};
 
 stockController.getStocks = catchAsync(async (req, res, next) => {
   let { page, limit, sortBy, ...filter } = req.query;
-  page = parseInt(page) || 1;
-  limit = parseInt(limit) || 10;
-
-  const totalNumReports = await Stock.find({ ...filter }).countDocuments();
-  const totalPages = Math.ceil(totalNumReports / limit);
-  const offset = limit * (page - 1);
-  const stocks = await Stock.find({ ...filter })
-    .sort({ ...sortBy, createdAt: -1 })
-    .skip(offset)
-    .limit(limit)
-    .populate("product");
-  return sendResponse(res, 200, true, { stocks, totalPages }, null, "");
+  const stocks = await Stock.find({ ...filter }).populate("product");
+  return sendResponse(res, 200, true, { stocks }, null, "");
 });
 
 stockController.createStock = catchAsync(async (req, res, next) => {
@@ -44,6 +34,8 @@ stockController.createStock = catchAsync(async (req, res, next) => {
       estimate: obj.estimate,
       real: obj.real,
       note: obj.note,
+      orderNeeded: obj.orderNeeded,
+      orderQuantity: obj.orderQuantity,
     });
     stockList = await Stock.find({ ...filter })
       .sort({ ...sortBy, createdAt: -1 })
@@ -103,6 +95,8 @@ stockController.updateStock = catchAsync(async (req, res, next) => {
         stockOut: obj.stockOut,
         estimate: obj.estimate,
         real: obj.real,
+        orderNeeded: obj.orderNeeded,
+        orderQuantity: obj.orderQuantity,
         note: obj.note,
       },
       {

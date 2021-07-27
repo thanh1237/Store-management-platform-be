@@ -15,8 +15,6 @@ userController.register = catchAsync(async (req, res, next) => {
   if (user)
     return next(new AppError(409, "User already exists", "Register Error"));
 
-  // const salt = await bcrypt.genSalt(10);
-  // password = await bcrypt.hash(password, salt);
   user = await User.create({
     name,
     email,
@@ -28,13 +26,7 @@ userController.register = catchAsync(async (req, res, next) => {
 
   let { page, limit, sortBy, ...filter } = req.query;
 
-  const totalNumProducts = await Product.find({ ...filter }).countDocuments();
-  const totalPages = Math.ceil(totalNumProducts / limit);
-  const offset = limit * (page - 1);
-
-  const products = await Product.find({ ...filter })
-    .sort({ ...sortBy, createdAt: -1 })
-    .skip(offset);
+  const products = await Product.find({ ...filter });
 
   const noneCocktailList = products?.filter((e) => e.type !== "Cocktail");
   const noneMocktailList = noneCocktailList?.filter(
@@ -62,9 +54,8 @@ userController.register = catchAsync(async (req, res, next) => {
       } else {
         console.log(result);
       }
-    })
-      .sort({ ...sortBy, createdAt: -1 })
-      .skip(offset);
+    });
+
     const stockArr = stockList.filter((stock) => stock.author.equals(user._id));
     const newOrder = await Order.findById(order._id).exec();
     const stockOfOrder = newOrder.stocks;
