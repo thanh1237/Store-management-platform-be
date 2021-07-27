@@ -12,12 +12,6 @@ const productController = {};
 
 productController.getProducts = catchAsync(async (req, res, next) => {
   let { page, limit, sortBy, ...filter } = req.query;
-  // page = parseInt(page) || 1;
-  // limit = parseInt(limit) || 10;
-
-  // const totalNumProducts = await Product.find({ ...filter }).countDocuments();
-  // const totalPages = Math.ceil(totalNumProducts / limit);
-  // const offset = limit * (page - 1);
 
   const products = await Product.find({ ...filter });
 
@@ -44,6 +38,7 @@ productController.getProductId = catchAsync(async (req, res, next) => {
 productController.createProduct = catchAsync(async (req, res, next) => {
   let {
     name,
+    supplier,
     unit,
     cost,
     capacity,
@@ -56,6 +51,7 @@ productController.createProduct = catchAsync(async (req, res, next) => {
   } = req.body;
   const product = await Product.create({
     name,
+    supplier,
     unit,
     cost,
     price,
@@ -67,13 +63,7 @@ productController.createProduct = catchAsync(async (req, res, next) => {
   });
   if (type === "Beer" || type === "Alcohol" || type === "Ingredient") {
     let { page, limit, sortBy, ...filter } = req.query;
-    page = parseInt(page) || 1;
-    limit = parseInt(limit) || 10;
-    const offset = limit * (page - 1);
-    const users = await User.find({ ...filter })
-      .sort({ ...sortBy, createdAt: -1 })
-      .skip(offset)
-      .limit(limit);
+    const users = await User.find({ ...filter });
     // Array of userIds
     const userIds = users.map((e) => e._id);
     // For each userIds create orders, stocks
@@ -122,6 +112,7 @@ productController.updateProduct = catchAsync(async (req, res, next) => {
   const productId = req.params.id;
   let {
     name,
+    supplier,
     unit,
     cost,
     capacity,
@@ -143,6 +134,7 @@ productController.updateProduct = catchAsync(async (req, res, next) => {
     { _id: productId },
     {
       name,
+      supplier,
       unit,
       cost,
       capacity,
