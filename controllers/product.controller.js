@@ -169,7 +169,6 @@ productController.deleteProduct = catchAsync(async (req, res, next) => {
   const product = await Product.findOneAndDelete({ _id: id });
   const stock = await Stock.findOneAndDelete({ product: id }).exec();
   await Stock.deleteMany({ product: id });
-
   const order = await Order.findOne({ author: stock.author }).exec();
   const stockArr = order.stocks;
   const filtered = stockArr.filter(function (value) {
