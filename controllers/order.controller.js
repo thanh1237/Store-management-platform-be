@@ -9,7 +9,7 @@ const orderController = {};
 orderController.getOrders = catchAsync(async (req, res, next) => {
   let { page, limit, sortBy, ...filter } = req.query;
   page = parseInt(page) || 1;
-  limit = parseInt(limit) || 10;
+  limit = parseInt(limit) || 100000000000;
 
   const totalNumReports = await Order.find({ ...filter }).countDocuments();
   const totalPages = Math.ceil(totalNumReports / limit);

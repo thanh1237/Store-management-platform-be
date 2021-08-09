@@ -18,5 +18,8 @@ router.use("/stocks", stockApi);
 // reportsApi
 const orderApi = require("./order.api");
 router.use("/orders", orderApi);
+// supplierApi
+const supplierApi = require("./supplier.api");
+router.use("/suppliers", supplierApi);
 
 module.exports = router;

@@ -8,9 +8,9 @@ const productSchema = Schema(
     price: { type: Number, default: 0 },
     unit: { type: String, required: true },
     quantity: { type: Number, default: 1 },
-    cost: { type: Number, default: 0, required: true },
+    cost: { type: Number, default: 0 },
     capacity: { type: Number, default: 0 },
-    capacityUnit: { type: String, default: "ml" },
+    capacityUnit: { type: String, default: "" },
     type: {
       type: String,
       required: true,

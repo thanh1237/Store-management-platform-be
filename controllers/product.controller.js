@@ -8,6 +8,7 @@ const bcrypt = require("bcryptjs");
 const Order = require("../models/Order");
 const Stock = require("../models/Stock");
 const User = require("../models/User");
+const Supplier = require("../models/Supplier");
 const productController = {};
 
 productController.getProducts = catchAsync(async (req, res, next) => {
@@ -97,6 +98,20 @@ productController.createProduct = catchAsync(async (req, res, next) => {
         stocks = await Stock.findByIdAndUpdate(stockId, { order: [order._id] });
       }
     });
+    const supp = await Supplier.findOne({ name: supplier }).exec();
+    if (!supp) {
+      await Supplier.create({
+        name: supplier,
+        email: "",
+        phone: "",
+        link: "",
+        products: [product._id],
+      });
+    } else {
+      const suppArr = supp.products;
+      const updateSuppArr = suppArr.concat([product._id]);
+      await Supplier.findByIdAndUpdate(supp._id, { products: updateSuppArr });
+    }
   }
   return sendResponse(
     res,
@@ -127,7 +142,7 @@ productController.updateProduct = catchAsync(async (req, res, next) => {
     quantity = 1;
   }
   if (!capacityUnit) {
-    capacityUnit = "ml";
+    capacityUnit = "";
   }
 
   const product = await Product.findOneAndUpdate(
@@ -146,6 +161,7 @@ productController.updateProduct = catchAsync(async (req, res, next) => {
     },
     { new: true }
   );
+
   if (!product)
     return next(
       new AppError(
@@ -175,6 +191,18 @@ productController.deleteProduct = catchAsync(async (req, res, next) => {
     return !value.equals(stock._id);
   });
   await Order.updateMany({}, { stocks: filtered });
+  const supplier = product.supplier;
+
+  const suppObj = await Supplier.findOne({ name: supplier }).exec();
+  const suppArr = suppObj.products;
+  const filteredSupp = suppArr.filter(function (value) {
+    return !value.equals(id);
+  });
+
+  await Supplier.findOneAndUpdate(
+    { name: supplier },
+    { products: filteredSupp }
+  );
 
   if (!product)
     return next(
