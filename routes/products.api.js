@@ -15,10 +15,12 @@ router.get("/", productController.getProducts);
  */
 router.get("/:id", productController.getProductId);
 /**
+ 
  * @route POST api/products
  * @description Create a new product
  * @access Login required
  */
+
 router.post("/", productController.createProduct);
 
 /**

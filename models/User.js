@@ -15,7 +15,6 @@ const userSchema = Schema(
     role: {
       type: String,
       required: true,
-      enum: ["Admin", "Rooftop", "Rock", "Acoustic", "Rap"],
     },
   },
   { timestamps: true }
