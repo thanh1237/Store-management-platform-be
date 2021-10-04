@@ -1,9 +1,9 @@
 var express = require("express");
+var cors = require('cors')
 require("dotenv").config();
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
-const cors = require("cors");
 const mongoose = require("mongoose");
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -15,7 +15,7 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(cors());
+app.use(cors({credentials: true, origin: true}));
 app.use(express.static(path.join(__dirname, "public")));
 
 mongoose
