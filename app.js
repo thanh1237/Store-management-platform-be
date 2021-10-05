@@ -30,7 +30,7 @@ mongoose
     console.log(`Mongoose connected to ${MONGODB_URI}`);
   })
   .catch((err) => console.log(err));
-
+  mongoose.set('bufferCommands', false);
 app.use("/api", indexRouter);
 
 // catch 404 and forward to error handler
