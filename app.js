@@ -18,7 +18,9 @@ app.use(cookieParser());
 app.use(cors({credentials: true, origin: true}));
 app.use(express.static(path.join(__dirname, "public")));
 
-mongoose
+
+try {
+  await mongoose
   .connect(MONGODB_URI, {
     // to get rid of deprecated warning
     useCreateIndex: true,
@@ -26,10 +28,16 @@ mongoose
     useFindAndModify: false,
     useUnifiedTopology: true,
   })
-  .then(() => {
-    console.log(`Mongoose connected to ${MONGODB_URI}`);
-  })
-  .catch((err) => console.log(err));
+  console.log(`Mongoose connected to ${MONGODB_URI}`);
+} catch (error) {
+  handleError(error);
+}
+
+
+  // .then(() => {
+    
+  // })
+  // .catch((err) => console.log(err));
 
 app.use("/api", indexRouter);
 

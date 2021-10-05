@@ -37,5 +37,6 @@ userSchema.methods.generateToken = async function () {
   return accessToken;
 };
 
+
 const User = mongoose.model("User", userSchema);
 module.exports = User;
