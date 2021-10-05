@@ -17,8 +17,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
-mongoose.set('bufferCommands', false);
- mongoose
+
+mongoose
   .connect(MONGODB_URI, {
     // to get rid of deprecated warning
     useCreateIndex: true,
