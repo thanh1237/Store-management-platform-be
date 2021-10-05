@@ -17,8 +17,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
-
-mongoose
+mongoose.set('bufferCommands', false);
+ mongoose
   .connect(MONGODB_URI, {
     // to get rid of deprecated warning
     useCreateIndex: true,
@@ -30,7 +30,7 @@ mongoose
     console.log(`Mongoose connected to ${MONGODB_URI}`);
   })
   .catch((err) => console.log(err));
-  mongoose.set('bufferCommands', false);
+
 app.use("/api", indexRouter);
 
 // catch 404 and forward to error handler
