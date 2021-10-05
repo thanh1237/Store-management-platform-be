@@ -1,13 +1,14 @@
 var express = require("express");
-var cors = require('cors')
 require("dotenv").config();
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
+const cors = require("cors");
 const mongoose = require("mongoose");
 const MONGODB_URI = process.env.MONGODB_URI;
 
 var indexRouter = require("./routes/index");
+var usersRouter = require("./routes/users");
 
 var app = express();
 
@@ -15,12 +16,10 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(cors({credentials: true, origin: true}));
+app.use(cors());
 app.use(express.static(path.join(__dirname, "public")));
 
-
-try {
-  await mongoose
+mongoose
   .connect(MONGODB_URI, {
     // to get rid of deprecated warning
     useCreateIndex: true,
@@ -28,16 +27,10 @@ try {
     useFindAndModify: false,
     useUnifiedTopology: true,
   })
-  console.log(`Mongoose connected to ${MONGODB_URI}`);
-} catch (error) {
-  handleError(error);
-}
-
-
-  // .then(() => {
-    
-  // })
-  // .catch((err) => console.log(err));
+  .then(() => {
+    console.log(`Mongoose connected to ${MONGODB_URI}`);
+  })
+  .catch((err) => console.log(err));
 
 app.use("/api", indexRouter);
 
