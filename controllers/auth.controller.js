@@ -9,7 +9,9 @@ const authController = {};
 
 authController.loginWithEmail = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
-  const user = await User.find({ email }, "+password");
+  const user = await User.findOne({ email }, "+password");
+  console.log(user)
+  console.log("password",password)
   if (!user)
     return next(new AppError(400, "Invalid credentials", "Login Error"));
   if (password !== user.password)
