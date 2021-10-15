@@ -98,19 +98,21 @@ productController.createProduct = catchAsync(async (req, res, next) => {
         stocks = await Stock.findByIdAndUpdate(stockId, { order: [order._id] });
       }
     });
-    const supp = await Supplier.findOne({ name: supplier }).exec();
-    if (!supp) {
-      await Supplier.create({
-        name: supplier,
-        email: "",
-        phone: "",
-        link: "",
-        products: [product._id],
-      });
-    } else {
-      const suppArr = supp.products;
-      const updateSuppArr = suppArr.concat([product._id]);
-      await Supplier.findByIdAndUpdate(supp._id, { products: updateSuppArr });
+    if (supplier) {
+      const supp = await Supplier.findOne({ name: supplier }).exec();
+      if (!supp) {
+        await Supplier.create({
+          name: supplier,
+          email: "",
+          phone: "",
+          link: "",
+          products: [product._id],
+        });
+      } else {
+        const suppArr = supp.products;
+        const updateSuppArr = suppArr.concat([product._id]);
+        await Supplier.findByIdAndUpdate(supp._id, { products: updateSuppArr });
+      }
     }
   }
   return sendResponse(
@@ -184,6 +186,7 @@ productController.deleteProduct = catchAsync(async (req, res, next) => {
   const id = req.params.id;
   const product = await Product.findOneAndDelete({ _id: id });
   const stock = await Stock.findOneAndDelete({ product: id }).exec();
+
   await Stock.deleteMany({ product: id });
   const order = await Order.findOne({ author: stock.author }).exec();
   const stockArr = order.stocks;
@@ -192,17 +195,18 @@ productController.deleteProduct = catchAsync(async (req, res, next) => {
   });
   await Order.updateMany({}, { stocks: filtered });
   const supplier = product.supplier;
+  if (supplier !== "") {
+    const suppObj = await Supplier.findOne({ name: supplier }).exec();
+    const suppArr = suppObj.products;
+    const filteredSupp = suppArr.filter(function (value) {
+      return !value.equals(id);
+    });
 
-  const suppObj = await Supplier.findOne({ name: supplier }).exec();
-  const suppArr = suppObj.products;
-  const filteredSupp = suppArr.filter(function (value) {
-    return !value.equals(id);
-  });
-
-  await Supplier.findOneAndUpdate(
-    { name: supplier },
-    { products: filteredSupp }
-  );
+    await Supplier.findOneAndUpdate(
+      { name: supplier },
+      { products: filteredSupp }
+    );
+  }
 
   if (!product)
     return next(
