@@ -185,15 +185,16 @@ productController.updateProduct = catchAsync(async (req, res, next) => {
 productController.deleteProduct = catchAsync(async (req, res, next) => {
   const id = req.params.id;
   const product = await Product.findOneAndDelete({ _id: id });
-  const stock = await Stock.findOneAndDelete({ product: id }).exec();
-
+  if(product.type === "Beer" || product.type === "Alcohol" || product.type === "Ingredient"){
+    const stock = await Stock.findOneAndDelete({ product: id }).exec();
   await Stock.deleteMany({ product: id });
   const order = await Order.findOne({ author: stock.author }).exec();
   const stockArr = order.stocks;
   const filtered = stockArr.filter(function (value) {
     return !value.equals(stock._id);
   });
-  await Order.updateMany({}, { stocks: filtered });
+  await Order.updateMany({}, { stocks: filtered }); 
+  }
   const supplier = product.supplier;
   if (supplier !== "") {
     const suppObj = await Supplier.findOne({ name: supplier }).exec();
