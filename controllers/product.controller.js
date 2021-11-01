@@ -9,14 +9,151 @@ const Order = require("../models/Order");
 const Stock = require("../models/Stock");
 const User = require("../models/User");
 const Supplier = require("../models/Supplier");
+const cukcukApi = require("../middlewares/cukcukApi ");
+const crypto = require("crypto");
+const moment = require("moment");
 const productController = {};
 
 productController.getProducts = catchAsync(async (req, res, next) => {
   let { page, limit, sortBy, ...filter } = req.query;
-
+  let missingProduct = [];
+  let todayRevenue = 0;
+  let todayCost = 0;
+  let yesterdayRevenue = 0;
+  let yesterdayCost = 0;
   const products = await Product.find({ ...filter });
+  const date = new Date();
+  const yesterday = moment().subtract(1, "days");
+  const appSecret = process.env.REACT_APP_SECRET_KEY;
+  const string = JSON.stringify({
+    AppID: "CUKCUKOpenPlatform",
+    Domain: "bake",
+    LoginTime: date,
+  });
+  const hash = crypto
+    .createHmac("sha256", appSecret)
+    .update(string)
+    .digest("hex");
+  const cukcuk = await cukcukApi.post("/Account/Login", {
+    AppID: "CUKCUKOpenPlatform",
+    Domain: "bake",
+    LoginTime: date,
+    SignatureInfo: hash,
+  });
+  const cukcukOrders = await cukcukApi.post("/v1/orders/paging", {
+    Page: 1,
+    Limit: 100,
+    BranchId: null,
+    HaveCustomer: true,
+  });
+  const Orders = cukcukOrders.data.Data;
+  const orderByDate = await Orders.filter((e) => {
+    return (
+      moment(e.Date).format("YYYY-MM-DD") === moment(date).format("YYYY-MM-DD")
+    );
+  });
 
-  return sendResponse(res, 200, true, { products }, null, "");
+  const idList = await orderByDate?.map((e) => e.Id);
+
+  const cukcukRes = await idList?.map(async (id) => {
+    let orderDetails = [];
+    const res = await cukcukApi.get(`/v1/orders/${id}`);
+    orderDetails.push(res.data.Data);
+    const mapRes = orderDetails.map((e) => {
+      return e.OrderDetails;
+    });
+    const final = await [].concat.apply([], mapRes);
+    return final;
+  });
+  const resCukcuk = await Promise.all(cukcukRes).then((result) => {
+    return result;
+  });
+  const cukcukOrder = resCukcuk.flat();
+  cukcukOrder?.forEach((order) => {
+    todayRevenue += order.Price * order.Quantity;
+    return todayRevenue;
+  });
+
+  const compareTodayOrderWithProduct = cukcukOrder?.map((e) => {
+    const obj = products?.find((product) => product.name === e.ItemName);
+    if (!obj) {
+      missingProduct = [...missingProduct, e?.ItemName];
+      return { ...e, cost: 0 };
+    } else {
+      return { ...e, cost: obj?.cost };
+    }
+  });
+
+  compareTodayOrderWithProduct?.forEach((order) => {
+    todayCost += parseFloat(order?.cost);
+    return todayCost;
+  });
+  const todayProfit = todayRevenue - todayCost;
+  // get yesterday order
+  const orderByYesterday = await cukcukOrders.data.Data.filter((e) => {
+    return (
+      moment(e.Date).format("YYYY-MM-DD") ===
+      moment(yesterday).format("YYYY-MM-DD")
+    );
+  });
+
+  const yesterdayIdList = await orderByYesterday?.map((e) => e.Id);
+
+  const yesterdayCukcukRes = await yesterdayIdList?.map(async (id) => {
+    let orderDetails = [];
+    const res = await cukcukApi.get(`/v1/orders/${id}`);
+    orderDetails.push(res.data.Data);
+    const mapRes = orderDetails.map((e) => {
+      return e.OrderDetails;
+    });
+    const final = await [].concat.apply([], mapRes);
+    return final;
+  });
+
+  const resCukcukYesterday = await Promise.all(yesterdayCukcukRes).then(
+    (result) => {
+      return result;
+    }
+  );
+
+  const yesterdayCukcukOrder = resCukcukYesterday.flat();
+  yesterdayCukcukOrder?.forEach((order) => {
+    yesterdayRevenue += order.Price * order.Quantity;
+    return yesterdayRevenue;
+  });
+
+  const compareYesterdayOrderWithProduct = yesterdayCukcukOrder?.map((e) => {
+    const obj = products?.find((product) => product.name === e.ItemName);
+    if (!obj) {
+      missingProduct = [...missingProduct, e?.ItemName];
+      return { ...e, cost: 0 };
+    } else {
+      return { ...e, cost: obj?.cost };
+    }
+  });
+
+  compareYesterdayOrderWithProduct?.forEach((order) => {
+    yesterdayCost += parseFloat(order?.cost);
+    return yesterdayCost;
+  });
+  const yesterdayProfit = yesterdayRevenue - yesterdayCost;
+
+  return sendResponse(
+    res,
+    200,
+    true,
+    {
+      products,
+      Orders,
+      todayRevenue,
+      todayProfit,
+      yesterdayRevenue,
+      yesterdayProfit,
+      missingProduct,
+    },
+    null,
+    ""
+  );
 });
 
 productController.getProductId = catchAsync(async (req, res, next) => {
@@ -185,15 +322,19 @@ productController.updateProduct = catchAsync(async (req, res, next) => {
 productController.deleteProduct = catchAsync(async (req, res, next) => {
   const id = req.params.id;
   const product = await Product.findOneAndDelete({ _id: id });
-  if(product.type === "Beer" || product.type === "Alcohol" || product.type === "Ingredient"){
+  if (
+    product.type === "Beer" ||
+    product.type === "Alcohol" ||
+    product.type === "Ingredient"
+  ) {
     const stock = await Stock.findOneAndDelete({ product: id }).exec();
-  await Stock.deleteMany({ product: id });
-  const order = await Order.findOne({ author: stock.author }).exec();
-  const stockArr = order.stocks;
-  const filtered = stockArr.filter(function (value) {
-    return !value.equals(stock._id);
-  });
-  await Order.updateMany({}, { stocks: filtered }); 
+    await Stock.deleteMany({ product: id });
+    const order = await Order.findOne({ author: stock.author }).exec();
+    const stockArr = order.stocks;
+    const filtered = stockArr.filter(function (value) {
+      return !value.equals(stock._id);
+    });
+    await Order.updateMany({}, { stocks: filtered });
   }
   const supplier = product.supplier;
   if (supplier !== "") {
