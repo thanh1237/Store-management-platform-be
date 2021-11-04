@@ -51,8 +51,6 @@ userController.register = catchAsync(async (req, res, next) => {
     let stockList = await Stock.find({ ...filter }, function (err, result) {
       if (err) {
         console.log(err);
-      } else {
-        console.log(result);
       }
     });
 
@@ -114,6 +112,7 @@ userController.deleteUser = catchAsync(async (req, res, next) => {
     );
   const order = await Order.findOne({ author: id });
   await Order.findOneAndDelete({ _id: order._id });
+  await Stock.deleteMany({ order: order._id });
 
   return sendResponse(res, 200, true, null, null, "Delete table successful");
 });

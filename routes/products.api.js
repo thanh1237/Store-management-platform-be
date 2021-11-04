@@ -2,11 +2,11 @@ const express = require("express");
 const router = express.Router();
 const productController = require("../controllers/product.controller");
 /**
- * @route GET api/products?page=1&limit=10
+ * @route POST api/products?page=1&limit=10
  * @description Get product with pagination
  * @access Public
  */
-router.get("/", productController.getProducts);
+router.post("/", productController.getProducts);
 
 /**
  * @route GET api/products/:id
@@ -21,7 +21,7 @@ router.get("/:id", productController.getProductId);
  * @access Login required
  */
 
-router.post("/", productController.createProduct);
+router.post("/createProduct", productController.createProduct);
 
 /**
  * @route PUT api/products/:id
