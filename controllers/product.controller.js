@@ -112,17 +112,17 @@ productController.getProducts = catchAsync(async (req, res, next) => {
     });
 
     const reduceBth = bth.reduce((total, item) => {
-      let itemArr = total.map((e) => e.obj.product._id);
-      if (!itemArr.includes(item.obj.product._id)) {
+      let itemArr = total.map((e) => e.obj?.product?._id);
+      if (!itemArr.includes(item.obj?.product?._id)) {
         return [...total, item];
-      } else if (itemArr.includes(item.obj.product._id)) {
+      } else if (itemArr.includes(item.obj?.product?._id)) {
         const obj = total.find((e) => {
-          if (e.obj.product._id === item.obj.product._id) {
+          if (e.obj?.product?._id === item.obj?.product?._id) {
             return { ...e, sold: item.sold };
           }
         });
         const index = total.findIndex(
-          (e) => e.obj.product._id === item.obj.product._id
+          (e) => e.obj?.product?._id === item.obj?.product?._id
         );
         total[index].sold += obj.sold;
       }
@@ -130,21 +130,21 @@ productController.getProducts = catchAsync(async (req, res, next) => {
     }, []);
     reduceBth.forEach(async (e) => {
       try {
-        if (e) {
+        if (e && e.obj) {
           await Stock.findByIdAndUpdate(
-            { _id: e.obj._id },
+            { _id: e.obj?._id },
             {
-              product: e.obj.product._id,
-              order: e.obj.order,
-              author: e.obj.author,
-              start: e.obj.start,
-              stockIn: e.obj.stockIn,
-              stockOut: e.obj.stockOut,
+              product: e.obj?.product._id,
+              order: e.obj?.order,
+              author: e.obj?.author,
+              start: e.obj?.start,
+              stockIn: e.obj?.stockIn,
+              stockOut: e.obj?.stockOut,
               estimate: Number(e.sold),
-              real: e.obj.real,
-              orderNeeded: e.obj.orderNeeded,
-              orderQuantity: e.obj.orderQuantity,
-              note: e.obj.note,
+              real: e.obj?.real,
+              orderNeeded: e.obj?.orderNeeded,
+              orderQuantity: e.obj?.orderQuantity,
+              note: e.obj?.note,
             },
             {
               new: true,
@@ -698,7 +698,7 @@ productController.deleteProduct = catchAsync(async (req, res, next) => {
     const filtered = stockArr.filter(function (value) {
       return !value.equals(stock._id);
     });
-    await Order.updateMany({}, { stocks: filtered });
+    await Order.updateMany({}, { stocks: filtered }, { new: true });
   }
   const supplier = product.supplier;
   if (supplier !== "") {
