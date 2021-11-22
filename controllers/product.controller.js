@@ -23,7 +23,7 @@ productController.getProducts = catchAsync(async (req, res, next) => {
   let yesterdayRevenue = 0;
   let yesterdayCost = 0;
   const cukCukDate = new Date();
-
+  let nearestDate;
   const yesterday = moment().subtract(1, "days");
   const products = await Product.find({ ...filter });
   const stocks = await Stock.find({ ...filter }).populate("product");
@@ -35,12 +35,60 @@ productController.getProducts = catchAsync(async (req, res, next) => {
   const nonAdminStocks = stocks.filter((e) => {
     return !e.author.equals(admin._id);
   });
-  const todayStock = nonAdminStocks.filter((e) => {
+
+  const sortedArr = nonAdminStocks?.reduce((total, product) => {
+    let container = [];
+    let tableArray = total.map((pro) => pro?.product.name);
+    if (!tableArray.includes(product.product.name)) {
+      return [...total, product];
+    } else {
+      let findDup = total?.find((e) => {
+        return e.product?.name === product.product?.name;
+      });
+      container.push(findDup);
+      container.push(product);
+      const datesToBeChecked = container?.map((stock) =>
+        moment(stock.createdAt).format("YYYY-MM-DD")
+      );
+      const newestStockList = container?.filter((stock) => {
+        let createdDate = moment(stock?.createdAt).format("YYYY-MM-DD");
+        const dateToCheckFor = moment(yesterday).format("YYYY-MM-DD");
+        datesToBeChecked.forEach((date) => {
+          let diff = moment(date).diff(moment(dateToCheckFor), "days");
+          if (diff < 0) {
+            if (nearestDate) {
+              if (moment(date).diff(moment(nearestDate), "days") > 0) {
+                nearestDate = date;
+                return nearestDate;
+              }
+            } else {
+              nearestDate = date;
+              return nearestDate;
+            }
+          } else {
+            nearestDate = date;
+            return nearestDate;
+          }
+        });
+        return createdDate === moment(nearestDate).format("YYYY-MM-DD");
+      });
+      for (let i = 0; i < total.length; i++) {
+        if (total[i]?.product.createdAt === product?.product.createdAt) {
+          total.splice(i, 1);
+          i--;
+        }
+      }
+
+      return [...total, newestStockList[0]];
+    }
+  }, []);
+  const todayStock = sortedArr.filter((e) => {
     return (
       moment(e.createdAt).format("YYYY-MM-DD") ===
-      moment(yesterday).format("YYYY-MM-DD")
+      moment(nearestDate).format("YYYY-MM-DD")
     );
   });
+  console.log(nearestDate);
 
   const appSecret = process.env.REACT_APP_SECRET_KEY;
   const string = JSON.stringify({
@@ -73,7 +121,6 @@ productController.getProducts = catchAsync(async (req, res, next) => {
         moment(date).format("YYYY-MM-DD")
       );
     });
-
     const idList = await orderByDate?.map((e) => e.Id);
 
     const cukcukRes = await idList?.map(async (id) => {
@@ -94,7 +141,6 @@ productController.getProducts = catchAsync(async (req, res, next) => {
       todayRevenue += order.Price * order.Quantity;
       return todayRevenue;
     });
-
     // TODO STOCK
     const bthItems = cukcukOrder?.filter((e) => {
       return e.UnitName === "Chai";
@@ -105,27 +151,23 @@ productController.getProducts = catchAsync(async (req, res, next) => {
     });
 
     const bth = bthItems?.map((params) => {
-      const obj = todayStock.find((e) => {
+      const obj = sortedArr.find((e) => {
         return e.product.name === params.ItemName;
       });
+
       return { obj, sold: params.Quantity };
     });
-
     const reduceBth = bth.reduce((total, item) => {
       let itemArr = total.map((e) => e.obj?.product?._id);
       if (!itemArr.includes(item.obj?.product?._id)) {
         return [...total, item];
       } else if (itemArr.includes(item.obj?.product?._id)) {
-        const obj = total.find((e) => {
-          if (e.obj?.product?._id === item.obj?.product?._id) {
-            return { ...e, sold: item.sold };
-          }
-        });
         const index = total.findIndex(
           (e) => e.obj?.product?._id === item.obj?.product?._id
         );
-        total[index].sold += obj.sold;
+        total[index].sold += item.sold;
       }
+      // console.log(total);
       return total;
     }, []);
     reduceBth.forEach(async (e) => {
