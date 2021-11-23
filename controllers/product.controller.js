@@ -88,7 +88,6 @@ productController.getProducts = catchAsync(async (req, res, next) => {
       moment(nearestDate).format("YYYY-MM-DD")
     );
   });
-  console.log(nearestDate);
 
   const appSecret = process.env.REACT_APP_SECRET_KEY;
   const string = JSON.stringify({
@@ -277,6 +276,7 @@ productController.getProducts = catchAsync(async (req, res, next) => {
     const compareTodayOrderWithProduct = cukcukOrder?.map((e) => {
       const obj = products?.find((product) => product.name === e.ItemName);
       if (!obj) {
+        console.log(e.ItemName);
         missingProduct = [...missingProduct, e?.ItemName];
         return { ...e, cost: 0 };
       } else {
@@ -337,7 +337,7 @@ productController.getProducts = catchAsync(async (req, res, next) => {
       return yesterdayCost;
     });
     const yesterdayProfit = yesterdayRevenue - yesterdayCost;
-
+    console.log("missingProduct", missingProduct);
     return sendResponse(
       res,
       200,
